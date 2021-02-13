@@ -1,0 +1,119 @@
+body {
+  /* https://search.creativecommons.org/photos/f606045e-27eb-47fd-949d-9a7318b5119a */
+  background: url("https://img.rawpixel.com/s3fs-private/rawpixel_images/website_content/pd44-352-ae-5a.jpg?w=1200&h=1200&fit=clip&crop=default&dpr=1&q=75&vib=3&con=3&usm=15&cs=srgb&bg=F4F4F3&ixlib=js-2.2.1&s=67c10825a06ed081edef42ca582e61ef");
+  color: #fff;
+  font-family: sans-serif;
+}
+
+.container {
+  display: inline-block;
+  outline: none;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.separator {
+  height: 1em;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.footer button {
+  background: #000;
+  color: #fff;
+}
+
+button.play.won {
+  background: #059c65;
+}
+
+button.play.lost {
+  background: #ff4223;
+}
+
+.row {
+  display: flex;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: relative;
+
+  width: 50px;
+  height: 50px;
+
+  background: #1d202700;
+  border: 2px inset #a2a4a9;
+
+  font-size: x-large;
+
+  user-select: none;
+}
+
+.cell.exit-n {
+  background-image: linear-gradient(to bottom, #81ff80, transparent);
+}
+
+.cell.exit-s {
+  background-image: linear-gradient(to top, #81ff80, transparent);
+}
+
+.cell.exit-e {
+  background-image: linear-gradient(to left, #81ff80, transparent);
+}
+
+.cell.exit-w {
+  background-image: linear-gradient(to right, #81ff80, transparent);
+}
+
+.cell.warp-n {
+  background-image: linear-gradient(to bottom, #b0f0ff, transparent);
+}
+
+.cell.warp-s {
+  background-image: linear-gradient(to top, #b0f0ff, transparent);
+}
+
+.cell.warp-e {
+  background-image: linear-gradient(to left, #b0f0ff, transparent);
+}
+
+.cell.warp-w {
+  background-image: linear-gradient(to right, #b0f0ff, transparent);
+}
+
+.cell.destroying {
+  background: #ff4223;
+}
+
+.queue .cell:nth-child(1) {
+  border: 2px solid #059c65;
+}
+
+svg {
+  fill: none;
+}
+
+.piece {
+  stroke: currentColor;
+  width: 50px;
+  height: 50px;
+}
+
+.goo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50px;
+  height: 50px;
+}
