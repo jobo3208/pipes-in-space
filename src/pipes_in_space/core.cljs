@@ -45,23 +45,25 @@
                                   {:type :angle :corner :sw :inlets #{:s}}
                                   {:type :angle :corner :sw :inlets #{:w}}])
 
+(defn floor [x]
+  (.floor js/Math x))
+
+(defn ceil [x]
+  (.ceil js/Math x))
+
 (defn level-params [level-num]
   (if (= (mod level-num 4) 3)
+    ; levels with exits need to be a little easier
     (merge (level-params (- level-num 2)) {:has-exit true})
     {:goo-delay (- 17 (/ level-num 3))
      :goo-speed (* (+ level-num 3) 0.06)
      :has-warp (> level-num 1)
      :min-pipeline-length (+ 14 level-num)
      :num-blocks (max 0 (- level-num 1))
+     :num-reservoirs (if (= (mod level-num 3) 1) 1 0)
      :queue-pieces (if (> level-num 3)
                      (apply concat unidirectional-queue-pieces (repeat 10 queue-pieces))
                      queue-pieces)}))
-
-(defn floor [x]
-  (.floor js/Math x))
-
-(defn ceil [x]
-  (.ceil js/Math x))
 
 
 ;;; board
@@ -73,6 +75,12 @@
       :s (if (< y (- h 1)) [(+ y 1) x] nil)
       :w (if (pos? x) [y (- x 1)] nil)
       :e (if (< x (- w 1)) [y (+ x 1)] nil))))
+
+(defn neighbors [[y x]]
+  (map #(neighbor-at-ord [y x] %) [:n :s :e :w]))
+
+(defn free? [board [y x]]
+  (every? #(= (get-in board %) {:type :empty}) (neighbors [y x])))
 
 (def opp-ord {:e :w :w :e :n :s :s :n})
 
@@ -247,7 +255,7 @@
 
 ;;; board setup
 
-(defn choose-start [open-points]
+(defn place-start [open-points]
   (let [start-point (rand-nth (filter (complement boundary?) open-points))
         start-ord (rand-nth [:n :s :e :w])
         start-piece {:type :start :direction start-ord}
@@ -255,7 +263,7 @@
         open-points (disj open-points start-point next-point)]
     [open-points start-point start-piece]))
 
-(defn choose-warps [open-points n]
+(defn place-warps [open-points n]
   (loop [open-points open-points
          n n
          warps {}]
@@ -269,22 +277,25 @@
         (recur open-points (dec n) warps))
       [open-points warps])))
 
-(defn choose-exit [open-points]
+(defn place-exit [open-points]
   (let [exit-point (rand-nth (filter boundary? open-points))
         exit-ord (rand-nth (boundary-ords exit-point))
         open-points (disj open-points exit-point)]
     [open-points [exit-point exit-ord]]))
 
-(defn choose-blocks [open-points board n]
-  (loop [open-points open-points
-         board board
-         n n]
-    (if (pos? n)
-      (let [block-point (rand-nth (seq open-points))
-            board (assoc-in board block-point {:type :block :fixed true})
-            open-points (disj open-points block-point)]
-        (recur open-points board (dec n)))
-      [open-points board])))
+(defn place-pieces
+  "Place the given pieces randomly on the board. If point-pred is given, only
+  choose from points that satisfy (point-pred board point). Return a pair of
+  the remaining open points and the board."
+  ([open-points board pieces]
+   (place-pieces open-points board pieces some?))
+  ([open-points board pieces point-pred]
+   (if (seq pieces)
+     (let [point (rand-nth (filter #(point-pred board %) open-points))
+           board (assoc-in board point (first pieces))
+           open-points (disj open-points point)]
+      (recur open-points board (rest pieces) point-pred))
+     [open-points board])))
 
 
 ;;; gameplay
@@ -303,15 +314,24 @@
 (defn new-level [state level-num timestamp]
   (let [level (level-params level-num)
         open-points (set (for [y (range 7) x (range 10)] [y x]))
-        [open-points start-point start-piece] (choose-start open-points)
+        [open-points start-point start-piece] (place-start open-points)
         [open-points warps] (if (:has-warp level)
-                              (choose-warps open-points 1)
+                              (place-warps open-points 1)
                               [open-points {}])
         [open-points exit] (if (:has-exit level)
-                             (choose-exit open-points)
+                             (place-exit open-points)
                              [open-points nil])
         board (assoc-in empty-board start-point start-piece)
-        [_ board] (choose-blocks open-points board (:num-blocks level))]
+        [open-points board] (place-pieces open-points
+                                          board
+                                          (repeat (:num-blocks level) {:type :block :fixed true}))
+        [_ board] (place-pieces open-points
+                                board
+                                (take (:num-reservoirs level)
+                                      (randish-seq (mapv #(-> {:type :reservoir
+                                                               :axis %
+                                                               :fixed true}) [:h :v])))
+                                free?)]
     (-> state
         (assoc :board board
                :start-point start-point

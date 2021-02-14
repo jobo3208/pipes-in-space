@@ -1,5 +1,10 @@
 (ns pipes-in-space.svg)
 
+;;; unfortunately, svg requires that masks be referred to by a unique id
+(def mask-id (atom 0))
+(defn get-mask-id! []
+  (swap! mask-id inc))
+
 (defn inlet-arrows [inlets]
   (map-indexed (fn [i ord]
                  ^{:key i}
@@ -68,6 +73,15 @@
     [:line {:x1 50 :y1 15 :x2 50 :y2 35 :stroke-width 5}]]
    (inlet-arrows inlets)])
 
+(defmethod piece-svg :reservoir [{:keys [axis inlets]}]
+  [:svg {:viewBox [0 0 50 50]}
+   [:g (when (= axis :h) {:transform "rotate(90, 25, 25)"})
+    [:line {:x1 25 :y1 0 :x2 25 :y2 50 :stroke-width 15}]
+    [:circle {:cx 25 :cy 25 :r 18 :fill "#fff"}]
+    [:line {:x1 15 :y1 0 :x2 35 :y2 0 :stroke-width 5}]
+    [:line {:x1 15 :y1 50 :x2 35 :y2 50 :stroke-width 5}]]
+   (inlet-arrows inlets)])
+
 (defmethod piece-svg :default [_] "?")
 
 (defmulti goo-svg (fn [piece _ _ _] (:type piece)))
@@ -80,6 +94,8 @@
                                :n 180
                                :e 270)]
                      (str "rotate(" deg ", 25, 25)"))}
+    ; don't need a unique mask id for the start piece, since there can
+    ; only ever be one.
     [:mask {:id "start-goo-mask"} [:rect {:x 0 :y 0 :width 50 :height (* pct 50) :fill :white}]]
     ; masks don't work with lines, so we use a circle and a rectangle
     ; <https://stackoverflow.com/a/53476700/15204>
@@ -125,5 +141,19 @@
                 :stroke-width 10
                 :stroke-linejoin :round
                 :stroke "#6b5eb3"}]]])
+
+(defmethod goo-svg :reservoir [_ inlet _ pct]
+  (let [mask-id (str "reservoir-goo-mask-" (get-mask-id!))]
+    [:svg {:class :goo :viewBox [0 0 50 50]}
+     [:g {:transform (let [deg (case inlet
+                                 :n 0
+                                 :e 90
+                                 :s 180
+                                 :w 270)]
+                       (str "rotate(" deg ", 25, 25)"))}
+      [:mask {:id mask-id} [:rect {:x 0 :y 0 :width 50 :height (* pct 50) :fill :white}]]
+      [:g {:fill "#6b5eb3" :mask (str "url(#" mask-id ")")}
+       [:rect {:x 20 :y 0 :width 10 :height 50}]
+       [:circle {:cx 25 :cy 25 :r 16}]]]]))
 
 (defmethod goo-svg :default [_ _ _ _] nil)
