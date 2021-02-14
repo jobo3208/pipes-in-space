@@ -532,7 +532,7 @@
    [queue-cp]])
 
 (defn app-cp []
-  [:div.container {:on-key-up (fn [e]
+  [:div#container {:on-key-up (fn [e]
                                 (case (.-keyCode e)
                                   113 (new-game!)
                                   115 (swap! state-atom toggle-pause)

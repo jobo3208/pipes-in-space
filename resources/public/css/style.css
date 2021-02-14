@@ -5,7 +5,7 @@ body {
   font-family: sans-serif;
 }
 
-.container {
+#container {
   display: inline-block;
   outline: none;
   position: relative;
