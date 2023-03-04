@@ -1,6 +1,5 @@
 body {
-  /* https://search.creativecommons.org/photos/f606045e-27eb-47fd-949d-9a7318b5119a */
-  background: url("https://img.rawpixel.com/s3fs-private/rawpixel_images/website_content/pd44-352-ae-5a.jpg?w=1200&h=1200&fit=clip&crop=default&dpr=1&q=75&vib=3&con=3&usm=15&cs=srgb&bg=F4F4F3&ixlib=js-2.2.1&s=67c10825a06ed081edef42ca582e61ef");
+  background: url("../img/stars.gif");
   color: #fff;
   font-family: sans-serif;
 }
